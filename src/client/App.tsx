@@ -4,7 +4,12 @@ import type { AuditEntry, FeatureFlag } from '../shared/types.js';
 import { api } from './api.js';
 import { FlagRow } from './FlagRow.js';
 
-export function App() {
+interface AppProps {
+  userEmail?: string | null;
+  onSignOut?: () => Promise<void>;
+}
+
+export function App({ userEmail, onSignOut }: AppProps) {
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +69,20 @@ export function App() {
 
   return (
     <div className="app">
-      <h1>Feature Flags</h1>
-      <p className="subtitle">Toggle flags, tune percentage rollouts, and review who changed what.</p>
+      <header className="app-header">
+        <div>
+          <h1>Feature Flags</h1>
+          <p className="subtitle">Toggle flags, tune percentage rollouts, and review who changed what.</p>
+        </div>
+        {userEmail && (
+          <div className="account">
+            <span className="muted">{userEmail}</span>
+            <button type="button" onClick={() => void onSignOut?.()}>
+              Sign out
+            </button>
+          </div>
+        )}
+      </header>
 
       {error && <div className="error">{error}</div>}
 

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 
 import express, { type NextFunction, type Request, type Response } from 'express';
 
+import { authEnabled, requireAuth } from './auth.js';
 import { pool } from './db.js';
 import { migrate } from './migrate.js';
 import { flagsRouter } from './routes/flags.js';
@@ -24,7 +25,11 @@ export function createApp() {
     }
   });
 
-  app.use('/api', flagsRouter);
+  app.use('/api', requireAuth, flagsRouter);
+
+  if (!authEnabled) {
+    console.warn('FIREBASE_PROJECT_ID is unset: the admin API accepts unauthenticated requests.');
+  }
 
   if (existsSync(clientDir)) {
     app.use(express.static(clientDir));

@@ -1,4 +1,4 @@
-import { Router, type RequestHandler } from 'express';
+import { Router, type Request, type RequestHandler } from 'express';
 import { z } from 'zod';
 
 import {
@@ -48,8 +48,8 @@ function wrap(handler: (...args: Parameters<RequestHandler>) => Promise<void>): 
   };
 }
 
-function actorFrom(header: string | undefined): string {
-  return header?.slice(0, 128) || 'admin-panel';
+function actorFrom(req: Request): string {
+  return req.user?.email ?? req.get('x-actor')?.slice(0, 128) ?? 'admin-panel';
 }
 
 /** The `:key` route parameter, always present for the routes that declare it. */
@@ -73,7 +73,7 @@ flagsRouter.post(
       return;
     }
     try {
-      res.status(201).json({ flag: await createFlag(parsed.data, actorFrom(req.get('x-actor'))) });
+      res.status(201).json({ flag: await createFlag(parsed.data, actorFrom(req)) });
     } catch (error) {
       if (error instanceof DuplicateFlagError) {
         res.status(409).json({ error: error.message });
@@ -93,7 +93,7 @@ flagsRouter.patch(
       return;
     }
     try {
-      res.json({ flag: await updateFlag(keyParam(req.params), parsed.data, actorFrom(req.get('x-actor'))) });
+      res.json({ flag: await updateFlag(keyParam(req.params), parsed.data, actorFrom(req)) });
     } catch (error) {
       if (error instanceof FlagNotFoundError) {
         res.status(404).json({ error: error.message });
@@ -108,7 +108,7 @@ flagsRouter.delete(
   '/flags/:key',
   wrap(async (req, res) => {
     try {
-      await deleteFlag(keyParam(req.params), actorFrom(req.get('x-actor')));
+      await deleteFlag(keyParam(req.params), actorFrom(req));
       res.status(204).end();
     } catch (error) {
       if (error instanceof FlagNotFoundError) {
