@@ -1,4 +1,16 @@
 node_modules/
 dist/
-.env
 *.log
+
+# Secrets: local env files and credential material must never be committed.
+.env
+.env.*
+!.env.example
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+credentials.json
+secrets.json
