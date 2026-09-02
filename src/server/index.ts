@@ -20,7 +20,8 @@ export function createApp() {
       await pool.query('SELECT 1');
       res.json({ status: 'ok', database: 'connected' });
     } catch (error) {
-      res.status(503).json({ status: 'degraded', database: 'unreachable', error: String(error) });
+      console.error(error);
+      res.status(503).json({ status: 'degraded', database: 'unreachable' });
     }
   });
 
