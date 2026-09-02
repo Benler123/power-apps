@@ -1,5 +1,5 @@
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import express, { type NextFunction, type Request, type Response } from 'express';
 
@@ -7,8 +7,7 @@ import { pool } from './db.js';
 import { migrate } from './migrate.js';
 import { flagsRouter } from './routes/flags.js';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const clientDir = join(here, '../client');
+const clientDir = resolve(process.cwd(), 'dist/client');
 const port = Number(process.env.PORT ?? 3001);
 
 export function createApp() {
@@ -26,7 +25,10 @@ export function createApp() {
   });
 
   app.use('/api', flagsRouter);
-  app.use(express.static(clientDir));
+
+  if (existsSync(clientDir)) {
+    app.use(express.static(clientDir));
+  }
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     console.error(error);
