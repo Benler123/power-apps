@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import type { NextFunction, Request, Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
@@ -16,6 +18,10 @@ const jwks = createRemoteJWKSet(
 export interface AuthenticatedUser {
   uid: string;
   email: string;
+}
+
+interface FirebaseClaims {
+  sign_in_provider?: unknown;
 }
 
 declare module 'express-serve-static-core' {
@@ -41,6 +47,11 @@ async function verifyIdToken(token: string): Promise<AuthenticatedUser> {
     issuer: `https://securetoken.google.com/${projectId}`,
     audience: projectId,
   });
+
+  const firebase = (payload.firebase ?? {}) as FirebaseClaims;
+  if (firebase.sign_in_provider !== 'google.com') {
+    throw new Error('Token was not issued through Google sign-in');
+  }
 
   const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : '';
   if (!email || payload.email_verified !== true) {

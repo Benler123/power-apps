@@ -71,7 +71,8 @@ Auth is off until you set the Firebase variables — the panel runs unauthentica
 4. Set `FIREBASE_PROJECT_ID` to the same project ID so the API rejects requests without a valid token.
 
 The browser gets a Firebase ID token and sends it as `Authorization: Bearer <token>`. The API verifies it
-against Google's public keys (no service-account key needed), requires a verified email, and records that
+against Google's public keys (no service-account key needed), requires a verified email that signed in
+through the Google provider (tokens from any other Firebase provider are rejected), and records that
 email as the actor in the audit log. Restrict who can get in with `ALLOWED_EMAIL_DOMAIN` or `ALLOWED_EMAILS`.
 
 ### Commands
