@@ -19,6 +19,7 @@ export function App({ userEmail, onSignOut }: AppProps) {
   const [newDescription, setNewDescription] = useState('');
   const [newRollout, setNewRollout] = useState(100);
   const [creating, setCreating] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -58,6 +59,17 @@ export function App({ userEmail, onSignOut }: AppProps) {
     }
   }
 
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await onSignOut?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
   async function mutate(action: () => Promise<unknown>) {
     try {
       await action();
@@ -77,8 +89,8 @@ export function App({ userEmail, onSignOut }: AppProps) {
         {userEmail && (
           <div className="account">
             <span className="muted">{userEmail}</span>
-            <button type="button" onClick={() => void onSignOut?.()}>
-              Sign out
+            <button type="button" onClick={() => void handleSignOut()} disabled={signingOut}>
+              {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
         )}
