@@ -1,9 +1,15 @@
 import type { AuditEntry, FeatureFlag } from '../shared/types.js';
+import { idToken } from './firebase.js';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = await idToken();
   const response = await fetch(`/api${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
   });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;

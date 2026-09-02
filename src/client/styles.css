@@ -184,3 +184,27 @@ code {
 .audit-list li:first-child {
   border-top: none;
 }
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.signin {
+  max-width: 420px;
+  margin: 12vh auto;
+  text-align: center;
+}
+
+.signin button {
+  margin-top: 8px;
+}
