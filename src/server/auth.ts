@@ -3,8 +3,8 @@ import 'dotenv/config';
 import type { NextFunction, Request, Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const projectId = process.env.FIREBASE_PROJECT_ID;
-const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
+const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.trim();
 const allowedEmails = (process.env.ALLOWED_EMAILS ?? '')
   .split(',')
   .map((email) => email.trim().toLowerCase())
