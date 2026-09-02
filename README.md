@@ -5,30 +5,72 @@ set percentage rollouts, delete them, and review an audit trail of every change.
 
 - **API**: Express + `pg`, request validation with zod
 - **UI**: React + Vite single page app
-- **Storage**: any Postgres instance reachable via `DATABASE_URL`
+- **Storage**: any Postgres 13+ instance reachable via `DATABASE_URL`
 
-## Setup
+## Quickstart
+
+Requires Node.js 20+ and a Postgres database.
 
 ```bash
+git clone https://github.com/Benler123/power-apps.git
+cd power-apps
 npm install
-cp .env.example .env   # then point DATABASE_URL at your Postgres
-npm run migrate        # creates feature_flags + feature_flag_audit
-npm run dev            # API on :3001, UI on http://localhost:5173
+cp .env.example .env
 ```
 
-`npm run dev` starts the API and the Vite dev server together; the dev server proxies `/api` to the API.
-The API also applies the schema on startup, so `npm run migrate` is only needed if you want to
-create the tables ahead of time.
+Open `.env` and set `DATABASE_URL` to your database, for example:
 
-Requires Postgres 13+ (uses `gen_random_uuid()` from the built-in `pgcrypto`/core functions).
-Set `PGSSLMODE=require` for managed instances that enforce TLS.
+```
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/feature_flags
+```
 
-## Production build
+Then start it:
 
 ```bash
-npm run build
-npm start              # serves the API and the built UI from :3001
+npm run dev
 ```
+
+Open **http://localhost:5173**. The tables are created automatically on first start.
+
+That's it — create a flag with a key like `checkout.new-cart`, hit **Enable**, and use **Edit**
+to lower its rollout percentage for a gradual release.
+
+### No Postgres handy?
+
+Any Postgres works. A throwaway local one:
+
+```bash
+docker run -d --name ffdb -p 5432:5432 \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=feature_flags postgres:16
+```
+
+That matches the `DATABASE_URL` shown above. Remove it later with `docker rm -f ffdb`.
+
+### Environment variables
+
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | yes | — | Postgres connection string |
+| `PORT` | no | `3001` | API port (the UI dev server proxies `/api` here) |
+| `PGSSLMODE` | no | — | Set to `require` for managed Postgres that enforces TLS |
+
+### Commands
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | API on `:3001` + UI on `:5173` with hot reload |
+| `npm run migrate` | Applies the schema (optional — `dev`/`start` do it too) |
+| `npm run build` | Builds the API and the UI |
+| `npm start` | Serves the API and the built UI from `:3001` |
+| `npm run lint` / `npm run typecheck` | Lint and type check |
+
+### Troubleshooting
+
+- **`DATABASE_URL is not set`** — you skipped `cp .env.example .env`, or the file isn't in the repo root.
+- **`ECONNREFUSED` on startup** — Postgres isn't running or the host/port in `DATABASE_URL` is wrong.
+  Confirm the app's view of it with `curl localhost:3001/api/health`.
+- **`password authentication failed`** — credentials in `DATABASE_URL` don't match the server.
+- **UI loads but shows a request error** — the API isn't up; check the `api` output of `npm run dev`.
 
 ## API
 
@@ -42,12 +84,19 @@ npm start              # serves the API and the built UI from :3001
 | `GET` | `/api/flags/:key/evaluate?subject=<id>` | Evaluate a flag for a subject |
 | `GET` | `/api/audit?flagKey=&limit=` | Recent audit entries |
 
-Mutating requests may set an `X-Actor` header; it is stored on the audit entry
-(defaults to `admin-panel`).
+Checking a flag from your own service:
+
+```bash
+curl 'http://localhost:3001/api/flags/checkout.new-cart/evaluate?subject=user-42'
+# {"key":"checkout.new-cart","enabled":true,"reason":"rollout_included"}
+```
 
 Evaluation is deterministic: a subject is bucketed by `sha1(flagKey:subject) % 100` and is
 included when that bucket is below the flag's rollout percentage, so the same subject always
 gets the same answer for a given flag and rollout.
+
+Mutating requests may set an `X-Actor` header; it is stored on the audit entry
+(defaults to `admin-panel`).
 
 ## Schema
 
