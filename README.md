@@ -52,7 +52,7 @@ That matches the `DATABASE_URL` shown above. Remove it later with `docker rm -f 
 | --- | --- | --- | --- |
 | `DATABASE_URL` | yes | — | Postgres connection string |
 | `PORT` | no | `3001` | API port (the UI dev server proxies `/api` here) |
-| `PGSSLMODE` | no | — | Set to `require` for managed Postgres that enforces TLS |
+| `PGSSLMODE` | no | — | Connections are plaintext by default; set to `require` only for managed Postgres that enforces TLS |
 
 ### Commands
 
